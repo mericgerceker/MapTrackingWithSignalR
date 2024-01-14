@@ -1,0 +1,53 @@
+﻿@{
+    Layout = null;
+}
+
+<div class="text-center">
+    Map
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js" integrity="sha512–7rhBJh1om/W5Ztx7WiYOR9h2wlSaTmPyQMoHFtbT/FVNIA12y6S6I8HY9mrBS1uJ3dSU/R3qaSAXsGYuRjMDxg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    var markers = [];
+    var connection = new signalR.HubConnectionBuilder().withUrl(`${"@ViewBag.ApiBaseUrl"}/location-hub`).build();
+
+    function startConnection() {
+        connection.start()
+            .then(function () {
+                console.log('Connection started!');
+            })
+            .catch(function (err) {
+                console.log('Error while establishing connection :(');
+                setTimeout(startConnection, 5000);
+            });
+    }
+
+    startConnection();
+
+    connection.on("ReceiveLocation", function (location) {
+        console.log(`Vehicle ${location.vehicleId} is at (${location.latitude - location.longitude})`);
+        updateMarker(location.vehicleId, location.latitude, location.longitude);
+    });
+
+    function sendMessage(vehicleId, message) {
+        connection.invoke("SendMessage", vehicleId, message)
+            .catch(function (err) {
+                return console.error(err.toString());
+            });
+    }
+
+    function updateMarker(vehicleId, latitude, longitude) {
+        var marker = markers[vehicleId];
+        if (marker == null) {
+            /*marker = new google.maps.Marker({
+                position: { lat: latitude, lng: longitude },
+                map: map,
+                title: 'Hello World!'
+            });*/
+            markers[vehicleId] = marker;
+        }
+        else {
+            //marker.setPosition({ lat: latitude, lng: longitude });
+        }
+    }
+</script>
